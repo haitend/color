@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -7,73 +8,27 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <android.support.v4.view.ViewPager
+        <github.chenupt.springindicator.viewpager.ScrollerViewPager
             android:id = "@+id/ViewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            ></android.support.v4.view.ViewPager>
+            ></github.chenupt.springindicator.viewpager.ScrollerViewPager>
     </FrameLayout>
 
-    <LinearLayout
+
+    <github.chenupt.springindicator.SpringIndicator
+        app:siTextSize="18sp"
+        app:siRadiusMax="20dp"
+        app:siRadiusMin="20dp"
+        app:siTextColor="@color/colorPrimaryDark"
+        app:siSelectedTextColor="@android:color/white"
+        app:siIndicatorColor="@color/colorPrimary"
+        android:id="@+id/indicator"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/imageInfo"
-        android:id="@+id/buttonPanel">
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="蓝色盲"
-            android:onClick="test"
-            android:id="@+id/test4" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="蓝色弱"
-            android:onClick="test"
-            android:id="@+id/test5" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="全色盲"
-            android:onClick="test"
-            android:id="@+id/test6" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="全色弱"
-            android:onClick="test"
-            android:id="@+id/test7" />
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonPanel"
-        android:id="@+id/buttonPanel1">
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="红色盲"
-            android:onClick="test"
-            android:id="@+id/test0" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="红色弱"
-            android:onClick="test"
-            android:id="@+id/test1" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="绿色盲"
-            android:onClick="test"
-            android:id="@+id/test2" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="绿色弱"
-            android:onClick="test"
-            android:id="@+id/test3" />
-    </LinearLayout>
+        android:layout_height="64dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_above="@+id/imageInfo"/>
 
     <Button
         android:layout_width="30dp"

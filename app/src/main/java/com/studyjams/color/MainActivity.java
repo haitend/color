@@ -3,15 +3,8 @@ package com.studyjams.color;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 
@@ -20,15 +13,25 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 
+import com.google.common.collect.Lists;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.BinaryHttpResponseHandler;
+import com.studyjams.color.Fragment.imageAdapter;
+import com.studyjams.color.Fragment.imagePage;
+import com.xgc1986.parallaxPagerTransformer.ParallaxPagerTransformer;
 
 
 import cz.msebera.android.httpclient.Header;
+import github.chenupt.multiplemodel.viewpager.ModelPagerAdapter;
+import github.chenupt.multiplemodel.viewpager.PagerManager;
+import github.chenupt.springindicator.SpringIndicator;
+import github.chenupt.springindicator.viewpager.ScrollerViewPager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,7 +45,8 @@ import java.io.OutputStream;
 public class MainActivity extends AppCompatActivity {
     ImageView backgroundImg;
     SharedPreferences preferences;
-
+    ScrollerViewPager mViewPager;
+    App instance = App.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,16 +57,38 @@ public class MainActivity extends AppCompatActivity {
         //给配置赋值
         preferences = getSharedPreferences("SplashSettings", Activity.MODE_PRIVATE);
 
-        File dir = getFilesDir();
-        final File imgFile = new File(dir, "splash.jpg");
+        mViewPager = (ScrollerViewPager)findViewById(R.id.ViewPager);
 
-        //判断是否下载过图片，如果下载过则显示下载的背景图，没有则显示默认图
-        if (imgFile.exists()) {
-            backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 0)); //获取输入文件的路径转化为bitmap流
+//        FragmentManager fragmentManager = getSupportFragmentManager();
+//        mAdapter =  new imageAdapter(fragmentManager);
+//        mViewPager.setAdapter(mAdapter);
+//
 
-        } else {
-            backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 0));
-        }
+        ParallaxPagerTransformer x = new ParallaxPagerTransformer(R.id.background) ;
+        x.setSpeed(1f);
+        mViewPager.setPageTransformer(false, x);
+
+        PagerManager manager = new PagerManager();
+        manager.setTitles(getTitles());//设置指示器的文字
+        //添加4个ViewPager页面
+        manager.addFragment(imagePage.newInstance(0));
+        manager.addFragment(imagePage.newInstance(1));
+        manager.addFragment(imagePage.newInstance(2));
+        manager.addFragment(imagePage.newInstance(3));
+//        manager.addFragment(imagePage.newInstance(4));
+//        manager.addFragment(imagePage.newInstance(5));
+//        manager.addFragment(imagePage.newInstance(6));
+//        manager.addFragment(imagePage.newInstance(7));
+
+        ModelPagerAdapter adapter = new ModelPagerAdapter(getSupportFragmentManager(), manager);
+        mViewPager.setAdapter(adapter);
+        mViewPager.fixScrollSpeed();
+
+
+        SpringIndicator springIndicator = (SpringIndicator) findViewById(R.id.indicator);
+        springIndicator.setViewPager(mViewPager);
+
+
 
         //请求接口数据，并将数据更新至配置文件
         initSelf();
@@ -72,89 +98,16 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    //输入图片，处理成不同色相的新图片
-    public Bitmap handleImage(Bitmap bitmap, int color) {
-
-        Bitmap updateBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());//定义与原图同尺寸的新图区域
-        Canvas canvas = new Canvas(updateBitmap);//定义画布
-        Paint paint = new Paint();//定义画笔
-        final ColorMatrix colorMatrix = new ColorMatrix();//定义色相矩阵
-        paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
-        paint.setColor(Color.BLACK);
-        paint.setAntiAlias(true); // 设置抗锯齿,也即是边缘做平滑处理
-
-        final Matrix matrix = new Matrix();
-        canvas.drawBitmap(bitmap, matrix, paint);
-
-//        Bitmap bmp = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.ARGB_8888);
-//        // 创建一个相同尺寸的可变的位图区,用于绘制调色后的图片
-//        Canvas canvas = new Canvas(bmp); // 得到画笔对象
-//        Paint paint = new Paint(); // 新建paint
-//        paint.setAntiAlias(true); // 设置抗锯齿,也即是边缘做平滑处理
-
-        if (color == 0) {//红色盲
-            colorMatrix.set(new float[]{(float) 0.567, (float) 0.433, 0, 0, 0,// 红色值
-                    (float) 0.558, (float) 0.442, 0, 0, 0,// 绿色值
-                    0, (float) 0.242, (float) 0.758, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-        } else if (color == 1) {//红色弱
-            colorMatrix.set(new float[]{(float) 0.817, (float) 0.183, 0, 0, 0,// 红色值
-                    (float) 0.333, (float) 0.667, 0, 0, 0,// 绿色值
-                    0, (float) 0.125, (float) 0.875, 0, 0, // 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        } else if (color == 2) {//绿色盲
-            colorMatrix.set(new float[]{(float) 0.625, (float) 0.375, 0, 0, 0,// 红色值
-                    (float) 0.7, (float) 0.3, 0, 0, 0,// 绿色值
-                    0, (float) 0.3, (float) 0.7, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        } else if (color == 3) {//绿色弱
-            colorMatrix.set(new float[]{(float) 0.8, (float) 0.2, 0, 0, 0,// 红色值
-                    (float) 0.258, (float) 0.742, 0, 0, 0,// 绿色值
-                    0, (float) 0.142, (float) 0.858, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        } else if (color == 4) {//蓝色盲
-            colorMatrix.set(new float[]{(float) 0.95, (float) 0.05, 0, 0, 0,// 红色值
-                    0, (float) 0.433, (float) 0.567, 0, 0,// 绿色值
-                    0, (float) 0.475, (float) 0.525, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        } else if (color == 5) {//蓝色弱
-            colorMatrix.set(new float[]{(float) 0.967, (float) 0.033, 0, 0, 0,// 红色值
-                    0, (float) 0.733, (float) 0.267, 0, 0,// 绿色值
-                    0, (float) 0.183, (float) 0.817, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        } else if (color == 6) {//全色盲
-            colorMatrix.set(new float[]{(float) 0.299, (float) 0.587, (float) 0.114, 0, 0,// 红色值
-                    (float) 0.299, (float) 0.587, (float) 0.114, 0, 0,// 绿色值
-                    (float) 0.299, (float) 0.587, (float) 0.114, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        } else if (color == 7) {//全色弱
-            colorMatrix.set(new float[]{(float) 0.618, (float) 0.320, (float) 0.062, 0, 0,// 红色值
-                    (float) 0.163, (float) 0.775, (float) 0.062, 0, 0,// 绿色值
-                    (float) 0.163, (float) 0.320, (float) 0.516, 0, 0,// 蓝色值
-                    0, 0, 0, 1, 0 // 透明度
-            });
-
-        }
-
-
-        paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));// 设置颜色变换效果
-        canvas.drawBitmap(bitmap, matrix, paint); // 将颜色变化后的图片输出到新创建的位图区
-        // 返回新的位图，也即调色处理后的图片
-        return updateBitmap;
+    private List<String> getTitles(){
+        return Lists.newArrayList("红绿一型", "红绿二型2", "蓝黄色盲", "全色盲");
     }
+
+
+
+
+
+
+
 
     //初始化接口请求
     public void initSelf() {
@@ -242,70 +195,96 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+//
+//        public void test(View button) {
+//
+//
+//        if (button.getId() == R.id.test0) {
+//            mViewPager.setCurrentItem(0);
+//        }else if(button.getId() == R.id.test1) {
+//            mViewPager.setCurrentItem(1);
+//        }else if(button.getId() == R.id.test2) {
+//            mViewPager.setCurrentItem(2);
+//        }else if(button.getId() == R.id.test3) {
+//            mViewPager.setCurrentItem(3);
+//        }else if(button.getId() == R.id.test4) {
+//            mViewPager.setCurrentItem(4);
+//        }else if(button.getId() == R.id.test5) {
+//            mViewPager.setCurrentItem(5);
+//        }else if(button.getId() == R.id.test6) {
+//            mViewPager.setCurrentItem(6);
+//        }else if(button.getId() == R.id.test7) {
+//            mViewPager.setCurrentItem(7);
+//        }
+//
+//
+//
+//    }
 
-    public void test(View button) {
-        File dir = getFilesDir();
-        final File imgFile = new File(dir, "splash.jpg");
-
-        if (button.getId() == R.id.test0) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 0)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 0));
-            }
-
-        } else if (button.getId() == R.id.test1) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 1)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 1));
-            }
-        } else if (button.getId() == R.id.test2) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 2)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 2));
-            }
-        } else if (button.getId() == R.id.test3) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 3)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 3));
-            }
-        } else if (button.getId() == R.id.test4) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 4)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 4));
-            }
-        } else if (button.getId() == R.id.test5) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 5)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 5));
-            }
-        } else if (button.getId() == R.id.test6) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 6)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 6));
-            }
-        } else if (button.getId() == R.id.test7) {
-            if (imgFile.exists()) {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 7)); //获取输入文件的路径转化为bitmap流
-
-            } else {
-                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 7));
-            }
-        }
-    }
+//原处理图片的代码，现在不用咯
+//    public void test(View button) {
+//        File dir = getFilesDir();
+//        final File imgFile = new File(dir, "splash.jpg");
+//
+//        if (button.getId() == R.id.test0) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 0)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 0));
+//            }
+//
+//        } else if (button.getId() == R.id.test1) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 1)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 1));
+//            }
+//        } else if (button.getId() == R.id.test2) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 2)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 2));
+//            }
+//        } else if (button.getId() == R.id.test3) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 3)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 3));
+//            }
+//        } else if (button.getId() == R.id.test4) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 4)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 4));
+//            }
+//        } else if (button.getId() == R.id.test5) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 5)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 5));
+//            }
+//        } else if (button.getId() == R.id.test6) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 6)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 6));
+//            }
+//        } else if (button.getId() == R.id.test7) {
+//            if (imgFile.exists()) {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeFile(imgFile.getAbsolutePath()), 7)); //获取输入文件的路径转化为bitmap流
+//
+//            } else {
+//                backgroundImg.setImageBitmap(handleImage(BitmapFactory.decodeResource(getResources(), R.drawable.start), 7));
+//            }
+//        }
+//    }
 
     public void go(View button) {
         if (button.getId() == R.id.imageInfo) {

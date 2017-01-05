@@ -2,22 +2,27 @@ package com.studyjams.color.Fragment;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
+
+import com.studyjams.color.App;
 
 /**
  * Created by lazyeo on 8/8/16.
  */
-public class fragmentAdapter extends FragmentStatePagerAdapter {
-    public fragmentAdapter(FragmentManager fm) {
+public class imageAdapter extends FragmentStatePagerAdapter {
+
+    App instance = App.getInstance();
+
+    public imageAdapter(FragmentManager fm) {
         super(fm);
     }
     @Override
     public int getCount() {
-        return 24;
+        return instance.imageArray.size();
     }
+
     @Override
     public Fragment getItem(int position) {
-                return testImg.newInstance(position);
-        }
+        return imagePage.newInstance(position);
+    }
 }

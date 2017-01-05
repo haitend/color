@@ -28,7 +28,7 @@ import java.io.IOException;
 public class ImageLib extends Activity{
     ImageView splashImg;
     TextView author,info;
-    SharedPreferences preferences;
+    App instance = App.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +36,7 @@ public class ImageLib extends Activity{
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.imagelib);
-        splashImg = (ImageView) findViewById(R.id.splashImg);
-        preferences = getSharedPreferences("SplashSettings", Activity.MODE_PRIVATE);
+
         initSplash();
 
 
@@ -45,22 +44,13 @@ public class ImageLib extends Activity{
 
     private void initSplash() {
 
+        splashImg = (ImageView) findViewById(R.id.splashImg);
         author = (TextView)findViewById(R.id.author);
         info = (TextView)findViewById(R.id.info);
 
-        File dir = getFilesDir();
-        final File imgFile = new File(dir, "splash.jpg");
-        if (imgFile.exists()) {
-            splashImg.setImageBitmap(BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
-            author.setText(preferences.getString("author","author"));
-            info.setText(preferences.getString("info","info"));
-        } else {
-            splashImg.setImageResource(R.drawable.start);
-            info.setText("见你所未见");
-            author.setText("(◜◔。◔◝)");
-            info.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            author.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        }
+        splashImg.setImageBitmap(instance.imageBitmap);
+        info.setText(instance.imageInfo);
+        author.setText(instance.imageAuthor);
 
 
     }
@@ -75,7 +65,7 @@ public class ImageLib extends Activity{
         if (!appDir.exists()) {
             appDir.mkdir();
         }
-        String fileName = preferences.getString("info","info") + ".jpg";
+        String fileName = instance.imageInfo + ".jpg";
         File file = new File(appDir, fileName);
         if (file.exists()){
             Toast.makeText(ImageLib.this, "已存过本图", Toast.LENGTH_LONG).show();
@@ -121,15 +111,7 @@ public class ImageLib extends Activity{
     }
 
     protected void downloadButton(View button){
-
-        File dir = getFilesDir();
-        final File imgFile = new File(dir, "splash.jpg");
-        if (imgFile.exists()) {
-            saveImageToGallery(ImageLib.this,BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
-        } else {
-            saveImageToGallery(ImageLib.this,BitmapFactory.decodeResource(getResources(),R.drawable.start));
-        }
-
+        saveImageToGallery(ImageLib.this,instance.imageBitmap);
     }
 
     protected void close(View image){
